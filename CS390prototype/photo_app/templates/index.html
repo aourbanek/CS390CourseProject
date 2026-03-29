@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Photo Manager</title>
+</head>
+<body>
+    <h1>Upload Photo</h1>
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required><br><br>
+
+        <input type="text" name="name" placeholder="Photo name" required><br><br>
+
+        <textarea name="description" placeholder="Description"></textarea><br><br>
+
+        <input type="text" name="tags" placeholder="Tags (comma separated)"><br><br>
+
+        <button type="submit">Upload</button>
+    </form>
+
+    <hr>
+
+    <h2>Uploaded Photos</h2>
+
+    <!-- Looped HTML per uploaded photo using Jinja -->
+    {% for photo in photos %}
+        <div style="margin-bottom:20px;">
+            <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200"><br>
+            <strong>{{ photo[2] }}</strong><br>
+            <em>{{ photo[3] }}</em><br>
+            Tags: {{ photo[4] }}
+        </div>
+    {% endfor %}
+
+</body>
+</html>
