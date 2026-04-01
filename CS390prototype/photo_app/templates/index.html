@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Manager</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="/../static/css/index.css">
 </head>
 <body>
 <main>
@@ -28,15 +28,24 @@
 
     <div class="uploaded-photos">
         <h1>Uploaded Photos</h1>
-        <!-- Looped HTML per uploaded photo using Jinja -->
-        {% for photo in photos %}
-            <div style="margin-bottom:20px;">
-                <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200"><br>
-                <strong>{{ photo[2] }}</strong><br>
-                <em>{{ photo[3] }}</em><br>
-                Tags: {{ photo[4] }}
-            </div>
-        {% endfor %}
+        <div class="uploaded-flex">
+            <!-- Looped HTML per uploaded photo using Jinja -->
+            {% for photo in photos %}
+                <div class="photo-unit">
+                    <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}"><br>
+                    <strong>{{ photo[2] }}</strong><br>
+                    <em>{{ photo[3] }}</em><br>
+                    <em>Tags: {{ photo[4] }} </em>>
+                    <!--for testing:-->
+<!--                    <img src="/../pic.jpg">-->
+<!--                    <div>-->
+<!--                        <strong>photo title</strong>-->
+<!--                        <em>photo description</em>-->
+<!--                        <em>tags: tag, tag, tag</em>-->
+<!--                    </div>-->
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </main>
 </body>
