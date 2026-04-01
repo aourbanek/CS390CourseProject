@@ -92,3 +92,24 @@ textarea {
 h1, hr {
     color: var(--col-blue);
 }
+
+
+.uploaded-flex {
+    display: flex
+}
+.photo-unit {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.photo-unit div {
+    background-color: var(--col-yellow);
+    border-radius: 0 0 20px 20px;
+    padding: 10px;
+}
+.photo-unit img {
+    max-width: 200%;
+    min-width: 50px;
+    min-height: 50px;
+    max-height: 400px;
+}
