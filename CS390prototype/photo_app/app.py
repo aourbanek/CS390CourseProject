@@ -74,5 +74,9 @@ def upload():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/index.css')
+def serve_css():
+    return send_from_directory(BASE_DIR, 'index.css')
+
 if __name__ == '__main__':
     app.run(debug=True)
