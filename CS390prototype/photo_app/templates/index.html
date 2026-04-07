@@ -6,15 +6,18 @@
     <title>Photo Manager</title>
     <link rel="stylesheet" href="/../static/css/index.css">
 </head>
+
 <body>
 <main>
     <div class="uploader">
         <h1>Upload Photo</h1> <hr>
         <form action="/upload" method="post" enctype="multipart/form-data">
-            <label for="file" class="button-file">
+            <label for="file" class="button-file" id="file-label">
                 Upload File...
             </label>
             <input type="file" name="file" id="file" required>
+            <br>
+            <img id="preview" src="" alt="" style="display:none; max-height: 200px; margin: 10px; border-radius: 10px; border: 2px solid var(--col-blue);">
             <br>
             <input type="text" name="name" placeholder="Photo name" required><br>
             <textarea name="description" placeholder="Description"></textarea><br>
@@ -28,6 +31,13 @@
 
     <div class="uploaded-photos">
         <h1>Uploaded Photos</h1>
+
+        <div style="margin: 20px 0; display: flex; align-items: center; gap: 12px; justify-content: center;">
+            <label for="cols-slider">Photos per row:</label>
+            <input type="range" id="cols-slider" min="1" max="8" value="3" step="1">
+            <span id="cols-label">3</span>
+        </div>
+
         <div class="uploaded-flex">
             <!-- Looped HTML per uploaded photo using Jinja -->
             {% for photo in photos %}
@@ -36,17 +46,36 @@
                     <strong>{{ photo[2] }}</strong><br>
                     <em>{{ photo[3] }}</em><br>
                     <em>Tags: {{ photo[4] }} </em>>
-                    <!--for testing:-->
-<!--                    <img src="/../pic.jpg">-->
-<!--                    <div>-->
-<!--                        <strong>photo title</strong>-->
-<!--                        <em>photo description</em>-->
-<!--                        <em>tags: tag, tag, tag</em>-->
-<!--                    </div>-->
                 </div>
             {% endfor %}
         </div>
     </div>
 </main>
+<script>
+    const slider = document.getElementById('cols-slider');
+    const label = document.getElementById('cols-label');
+    const grid = document.querySelector('.uploaded-flex');
+    function setCols(n) {
+        grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+        label.textContent = n;
+    }
+    slider.addEventListener('input', () => setCols(slider.value));
+    setCols(slider.value);
+
+    document.getElementById('file').addEventListener('change', function() {
+        const preview = document.getElementById('preview');
+        const fileLabel = document.getElementById('file-label');
+        const file = this.files[0];
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'inline-block';
+            fileLabel.textContent = file.name;
+        } else {
+            preview.style.display = 'none';
+            fileLabel.textContent = 'Upload File...';
+        }
+    });
+</script>
+
 </body>
 </html>
