@@ -35,7 +35,8 @@
                     <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}"><br>
                     <strong>{{ photo[2] }}</strong><br>
                     <em>{{ photo[3] }}</em><br>
-                    <em>Tags: {{ photo[4] }} </em>>
+                    <em>Tags: {{ photo[4] }} </em>
+                    <a href="/delete/{{ photo[0] }}">Delete</a>
                     <!--for testing:-->
 <!--                    <img src="/../pic.jpg">-->
 <!--                    <div>-->
