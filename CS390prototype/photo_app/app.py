@@ -69,6 +69,29 @@ def upload():
 
     return redirect(url_for('index'))
 
+@app.route('/delete', methods=['DELETE'])
+def delete(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    #get filename
+    c.execute("SELECT filename FROM photos WHERE id = ?", (id,))
+    photo = c.fetchone()
+
+    if photo:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], photo[0])
+
+        # Delete file from uploads
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        # Delete from database
+        c.execute("DELETE FROM photos WHERE id = ?", (id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for('index'))
+
+
 # Supports "Open Image in new tab" browser action
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
