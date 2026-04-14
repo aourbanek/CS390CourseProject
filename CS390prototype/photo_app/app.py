@@ -88,6 +88,9 @@ def delete(id):
         c.execute("DELETE FROM photos WHERE id = ?", (id,))
         conn.commit()
 
+        #debug
+        print("DELETE ROUTE HIT:", id)
+
     conn.close()
     return redirect(url_for('index'))
 
