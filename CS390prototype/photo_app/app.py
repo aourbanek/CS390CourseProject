@@ -69,7 +69,7 @@ def upload():
 
     return redirect(url_for('index'))
 
-@app.route('/delete'/<int:id>')
+@app.route('/delete/<int:id>')
 def delete(id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -88,11 +88,11 @@ def delete(id):
         c.execute("DELETE FROM photos WHERE id = ?", (id,))
         conn.commit()
 
-        #debug
-        print("DELETE ROUTE HIT:", id)
-
     conn.close()
     return redirect(url_for('index'))
+
+#debug
+print("DELETE ROUTE HIT:", id)
 
 
 # Supports "Open Image in new tab" browser action
