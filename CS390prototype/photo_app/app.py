@@ -69,7 +69,7 @@ def upload():
 
     return redirect(url_for('index'))
 
-@app.route('/delete', methods=['DELETE'])
+@app.route('/delete'/<int:id>')
 def delete(id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
