@@ -69,6 +69,18 @@ def upload():
 
     return redirect(url_for('index'))
 
+#edit
+@app.route('/edit/<int:id>')
+def edit(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM photos WHERE id = ?", (id,))
+    photo = c.fetchone()
+
+    conn.close()
+    return render_template('edit.html', photo=photo)
+
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = sqlite3.connect('database.db')
@@ -93,6 +105,27 @@ def delete(id):
 
 #debug
 print("DELETE ROUTE HIT:", id)
+
+#save changes
+@app.route('/update/<int:id>', methods=['POST'])
+def update(id):
+    name = request.form['name']
+    description = request.form['description']
+    tags = request.form['tags']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("""
+        UPDATE photos
+        SET name = ?, description = ?, tags = ?
+        WHERE id = ?
+    """, (name, description, tags, id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('index'))
 
 
 # Supports "Open Image in new tab" browser action
