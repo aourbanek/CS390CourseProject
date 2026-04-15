@@ -41,12 +41,14 @@
         <div class="uploaded-flex">
             <!-- Looped HTML per uploaded photo using Jinja -->
             {% for photo in photos %}
-                <div class="photo-unit">
-                    <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}"><br>
-                    <strong>{{ photo[2] }}</strong><br>
-                    <em>{{ photo[3] }}</em><br>
-                    <em>Tags: {{ photo[4] }} </em>>
-                </div>
+            <div class="photo-unit">
+                <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200"><br>
+                <strong>{{ photo[2] }}</strong><br>
+                <em>{{ photo[3] }}</em><br>
+                <em>Tags: {{ photo[4] }} </em><br>
+                <em><a href="/edit/{{ photo[0] }}">Edit</a></em>
+                <em><a href="/delete/{{ photo[0] }}">Delete</a></em><br>
+             </div>
             {% endfor %}
         </div>
     </div>
