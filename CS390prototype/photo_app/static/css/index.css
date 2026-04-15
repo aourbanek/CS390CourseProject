@@ -95,18 +95,27 @@ h1, hr {
 
 
 .uploaded-flex {
-    display: flex
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 3), 1fr);
+    gap: 20px;
+    padding: 20px;
 }
+
 .photo-unit {
-    margin: 20px;
     display: flex;
     flex-direction: column;
 }
+
+.photo-unit img {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+}
+
 .photo-unit div {
-    background-color: var(--col-yellow);
-    border-radius: 0 0 20px 20px;
     padding: 10px;
 }
+
 .photo-unit img {
     max-width: 200%;
     min-width: 50px;
