@@ -1,28 +1,50 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 import os
 import sqlite3
 from werkzeug.utils import secure_filename
 
+# ======================
+# IMAGE AI (FREE BLIP MODEL)
+# ======================
+import torch
+from PIL import Image
+from transformers import BlipProcessor, BlipForConditionalGeneration
+
+# ======================
+# CONFIG
+# ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = "dev_secret"
 
-# Creates upload folder photo_app\uploads\ if not already present
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Initialize database
+# ======================
+# LOAD MODEL (ONCE)
+# ======================
+processor = BlipProcessor.from_pretrained(
+    "Salesforce/blip-image-captioning-base"
+)
+model = BlipForConditionalGeneration.from_pretrained(
+    "Salesforce/blip-image-captioning-base"
+)
+
+# ======================
+# DATABASE
+# ======================
 def init_db():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    # "Clears" db from previous tests
-    c.execute('''DROP TABLE IF EXISTS photos''')
-    # In this prototype, tags is just a TEXT value. In theory, tags would create
-    # a relation between the file and one or multiple tags in a "tags" table
-    # that SQL queries could be ran on to filter files by their tags.
+
+    c.execute('DROP TABLE IF EXISTS photos')
+
     c.execute('''
-        CREATE TABLE IF NOT EXISTS photos (
+        CREATE TABLE photos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT,
             name TEXT,
@@ -30,12 +52,42 @@ def init_db():
             tags TEXT
         )
     ''')
+
     conn.commit()
     conn.close()
 
 init_db()
 
-# provides photo data for HTML to display at bottom of page
+# ======================
+# HELPERS
+# ======================
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def generate_tags(image_path):
+    image = Image.open(image_path).convert("RGB")
+
+    inputs = processor(image, return_tensors="pt")
+
+    out = model.generate(**inputs)
+    caption = processor.decode(out[0], skip_special_tokens=True)
+
+    # convert caption → tags
+    words = caption.lower().replace(".", "").split()
+
+    stop_words = {"a", "an", "the", "is", "on", "in", "at", "with", "and", "of"}
+
+    tags = [w for w in words if w not in stop_words]
+
+    # remove duplicates while keeping order
+    tags = list(dict.fromkeys(tags))
+
+    return ", ".join(tags)
+
+# ======================
+# ROUTES
+# ======================
 @app.route('/')
 def index():
     conn = sqlite3.connect('database.db')
@@ -45,18 +97,39 @@ def index():
     conn.close()
     return render_template('index.html', photos=photos)
 
-# saves uploaded file & data to folder and records that in database
+
 @app.route('/upload', methods=['POST'])
 def upload():
-    file = request.files['file']
-    name = request.form['name']
-    description = request.form['description']
-    tags = request.form['tags']
+    if 'file' not in request.files:
+        flash("No file uploaded")
+        return redirect(url_for('index'))
 
-    if file:
+    file = request.files['file']
+    name = request.form.get('name', '')
+    description = request.form.get('description', '')
+    user_tags = request.form.get('tags', '').strip()
+
+    if file.filename == '':
+        flash("No file selected")
+        return redirect(url_for('index'))
+
+    # ONLY IMAGES
+    if file and allowed_file(file.filename):
+
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+
+        # AUTO TAGGING
+        generated_tags = generate_tags(filepath)
+
+        if user_tags:
+            user_tag_list = [tag.strip() for tag in user_tags.split(',') if tag.strip()]
+            generated_tag_list = [tag.strip() for tag in generated_tags.split(',') if tag.strip()]
+            combined_tags = user_tag_list + [tag for tag in generated_tag_list if tag not in user_tag_list]
+            tags = ", ".join(combined_tags)
+        else:
+            tags = generated_tags
 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -67,7 +140,11 @@ def upload():
         conn.commit()
         conn.close()
 
-    return redirect(url_for('index'))
+        return redirect(url_for('index'))
+
+    else:
+        flash("Only image files allowed")
+        return redirect(url_for('index'))
 
 #edit
 @app.route('/edit/<int:id>')
@@ -127,15 +204,18 @@ def update(id):
 
     return redirect(url_for('index'))
 
-
-# Supports "Open Image in new tab" browser action
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 @app.route('/index.css')
 def serve_css():
     return send_from_directory(BASE_DIR, 'index.css')
 
+
+# ======================
+# RUN APP
+# ======================
 if __name__ == '__main__':
     app.run(debug=True)
