@@ -146,6 +146,63 @@ def upload():
         flash("Only image files allowed")
         return redirect(url_for('index'))
 
+#edit
+@app.route('/edit/<int:id>')
+def edit(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM photos WHERE id = ?", (id,))
+    photo = c.fetchone()
+
+    conn.close()
+    return render_template('edit.html', photo=photo)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    #get filename
+    c.execute("SELECT filename FROM photos WHERE id = ?", (id,))
+    photo = c.fetchone()
+
+    if photo:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], photo[0])
+
+        # Delete file from uploads
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        # Delete from database
+        c.execute("DELETE FROM photos WHERE id = ?", (id,))
+        conn.commit()
+
+    conn.close()
+    return redirect(url_for('index'))
+
+#debug
+print("DELETE ROUTE HIT:", id)
+
+#save changes
+@app.route('/update/<int:id>', methods=['POST'])
+def update(id):
+    name = request.form['name']
+    description = request.form['description']
+    tags = request.form['tags']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("""
+        UPDATE photos
+        SET name = ?, description = ?, tags = ?
+        WHERE id = ?
+    """, (name, description, tags, id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('index'))
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
