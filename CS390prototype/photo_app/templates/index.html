@@ -8,7 +8,7 @@
 </head>
 
 <body>
-<main>
+<main id="page-content">
     <div class="uploader">
         <h1>Upload Photo</h1> <hr>
         <form action="/upload" method="post" enctype="multipart/form-data">
@@ -42,17 +42,66 @@
             <!-- Looped HTML per uploaded photo using Jinja -->
             {% for photo in photos %}
             <div class="photo-unit">
-                <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200"><br>
-                <strong>{{ photo[2] }}</strong><br>
-                <em>{{ photo[3] }}</em><br>
-                <em>Tags: {{ photo[4] }} </em><br>
-                <em><a href="/edit/{{ photo[0] }}">Edit</a></em>
-                <em><a href="/delete/{{ photo[0] }}">Delete</a></em><br>
+                <button
+                    type="button"
+                    class="photo-trigger"
+                    data-index="{{ loop.index0 }}"
+                    data-image="{{ url_for('uploaded_file', filename=photo[1]) }}"
+                    data-name="{{ photo[2] }}"
+                    data-description="{{ photo[3] }}"
+                    data-tags="{{ photo[4] }}"
+                    data-update-url="/update/{{ photo[0] }}"
+                    data-delete-url="/delete/{{ photo[0] }}"
+                >
+                    <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200">
+                </button>
+                <div class="photo-actions">
+                    <a href="/edit/{{ photo[0] }}">Edit</a>
+                    <a href="/delete/{{ photo[0] }}">Delete</a>
+                </div>
              </div>
             {% endfor %}
         </div>
     </div>
 </main>
+
+<div class="photo-modal hidden" id="photo-modal" aria-hidden="true">
+    <div class="photo-modal-backdrop" id="photo-modal-backdrop"></div>
+    <div class="photo-modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-photo-name">
+        <div class="modal-viewer">
+            <button type="button" class="modal-close" id="modal-close" aria-label="Close photo view">Exit</button>
+            <button type="button" class="modal-nav modal-nav-left" id="modal-prev" aria-label="Previous photo">
+                &#8249;
+            </button>
+            <div class="modal-image-wrap">
+                <img id="modal-photo-image" src="" alt="">
+            </div>
+            <button type="button" class="modal-nav modal-nav-right" id="modal-next" aria-label="Next photo">
+                &#8250;
+            </button>
+        </div>
+        <form class="modal-info" id="modal-edit-form" method="POST" action="">
+            <div class="modal-field">
+                <label for="modal-photo-name">Item Name</label>
+                <input id="modal-photo-name" name="name" type="text" required>
+            </div>
+            <div class="modal-field">
+                <label for="modal-photo-description">Item Description</label>
+                <textarea id="modal-photo-description" name="description" rows="4"></textarea>
+            </div>
+            <div class="modal-field">
+                <span class="modal-label">Applied Tags</span>
+                <div class="modal-tags" id="modal-photo-tags"></div>
+            </div>
+            <input id="modal-photo-tags-input" name="tags" type="hidden">
+            <div class="modal-actions">
+                <button type="submit" id="modal-save-button">Save Changes</button>
+                <a id="modal-delete-link" href="">Delete</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     const slider = document.getElementById('cols-slider');
     const label = document.getElementById('cols-label');
@@ -75,6 +124,98 @@
         } else {
             preview.style.display = 'none';
             fileLabel.textContent = 'Upload File...';
+        }
+    });
+
+    const modal = document.getElementById('photo-modal');
+    const modalBackdrop = document.getElementById('photo-modal-backdrop');
+    const modalClose = document.getElementById('modal-close');
+    const modalPrev = document.getElementById('modal-prev');
+    const modalNext = document.getElementById('modal-next');
+    const modalImage = document.getElementById('modal-photo-image');
+    const modalEditForm = document.getElementById('modal-edit-form');
+    const modalName = document.getElementById('modal-photo-name');
+    const modalDescription = document.getElementById('modal-photo-description');
+    const modalTags = document.getElementById('modal-photo-tags');
+    const modalTagsInput = document.getElementById('modal-photo-tags-input');
+    const modalDeleteLink = document.getElementById('modal-delete-link');
+    const photoButtons = Array.from(document.querySelectorAll('.photo-trigger'));
+    let currentIndex = 0;
+
+    function renderModal(button) {
+        modalImage.src = button.dataset.image;
+        modalImage.alt = button.dataset.name;
+        modalName.value = button.dataset.name || 'Untitled Photo';
+        modalDescription.value = button.dataset.description || 'No description provided.';
+        modalTags.innerHTML = '';
+
+        const tags = button.dataset.tags
+            ? button.dataset.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+            : [];
+        modalTagsInput.value = tags.join(', ');
+
+        if (tags.length === 0) {
+            const emptyTag = document.createElement('span');
+            emptyTag.className = 'tag-chip tag-chip-empty';
+            emptyTag.textContent = 'No tags';
+            modalTags.appendChild(emptyTag);
+        } else {
+            tags.forEach((tag) => {
+                const chip = document.createElement('span');
+                chip.className = 'tag-chip';
+                chip.textContent = tag;
+                modalTags.appendChild(chip);
+            });
+        }
+
+        modalEditForm.action = button.dataset.updateUrl;
+        modalDeleteLink.href = button.dataset.deleteUrl;
+    }
+
+    function openModal(button) {
+        currentIndex = Number(button.dataset.index || 0);
+        renderModal(button);
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        modalImage.src = '';
+        document.body.classList.remove('modal-open');
+    }
+
+    function showPhoto(index) {
+        const wrappedIndex = (index + photoButtons.length) % photoButtons.length;
+        currentIndex = wrappedIndex;
+        renderModal(photoButtons[wrappedIndex]);
+    }
+
+    photoButtons.forEach((button) => {
+        button.addEventListener('click', () => openModal(button));
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modalPrev.addEventListener('click', () => showPhoto(currentIndex - 1));
+    modalNext.addEventListener('click', () => showPhoto(currentIndex + 1));
+    modalBackdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (event) => {
+        if (modal.classList.contains('hidden')) {
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+
+        if (event.key === 'ArrowLeft') {
+            showPhoto(currentIndex - 1);
+        }
+
+        if (event.key === 'ArrowRight') {
+            showPhoto(currentIndex + 1);
         }
     });
 </script>

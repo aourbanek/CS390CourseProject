@@ -15,8 +15,9 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 # ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+DATABASE_PATH = os.path.join(BASE_DIR, 'database.db')
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -38,13 +39,11 @@ model = BlipForConditionalGeneration.from_pretrained(
 # DATABASE
 # ======================
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
-    c.execute('DROP TABLE IF EXISTS photos')
-
     c.execute('''
-        CREATE TABLE photos (
+        CREATE TABLE IF NOT EXISTS photos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT,
             name TEXT,
@@ -90,7 +89,7 @@ def generate_tags(image_path):
 # ======================
 @app.route('/')
 def index():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM photos")
     photos = c.fetchall()
@@ -131,7 +130,7 @@ def upload():
         else:
             tags = generated_tags
 
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(DATABASE_PATH)
         c = conn.cursor()
         c.execute(
             "INSERT INTO photos (filename, name, description, tags) VALUES (?, ?, ?, ?)",
@@ -149,7 +148,7 @@ def upload():
 #edit
 @app.route('/edit/<int:id>')
 def edit(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
     c.execute("SELECT * FROM photos WHERE id = ?", (id,))
@@ -160,7 +159,7 @@ def edit(id):
 
 @app.route('/delete/<int:id>')
 def delete(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
     #get filename
     c.execute("SELECT filename FROM photos WHERE id = ?", (id,))
@@ -190,7 +189,7 @@ def update(id):
     description = request.form['description']
     tags = request.form['tags']
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
     c.execute("""
