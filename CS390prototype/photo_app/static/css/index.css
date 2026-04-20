@@ -1,8 +1,11 @@
 
 :root {
-    --col-yellow: #faffe1;
-    --col-blue: #0045d0;
-    --col-green: #9bffc6;
+    --color-text-blue: #002A81;
+    --color-background-blue: #91b4ff;
+    --color-primary-green: #a1ffe7 /*#9cffc6*/;
+    --color-secondary-blue: #274ac7 /*#0045d0*/;
+    --color-highlights-yellow: #f3ffd8 /*#faffe1*/;
+    --color-shadow-green: #4fe6d9;
 }
 
 /*importing fonts*/
@@ -21,7 +24,10 @@
 body {
     margin: 0;
     font-family: "A Pompadour", sans-serif;
-    background-color: var(--col-yellow);
+    background: var(--color-background-blue);
+    background: radial-gradient(circle, var(--color-background-blue) 37%, var(--color-primary-green) 100%);
+    overflow-y: scroll;
+    color: var(--color-text-blue);
 }
 
 main {
@@ -31,23 +37,23 @@ main {
 .uploader {
     margin: 20px auto 55px auto;
     width: fit-content;
-    background-color: var(--col-green);
+    background-color: var(--color-primary-green);
     padding: 50px;
     border-radius: 20px;
     filter:
-            drop-shadow(15px 15px 0 var(--col-blue))
-            /*drop-shadow(-10px -10px 0 var(--col-blue))*/;
-    border: solid 5px var(--col-blue);
+            drop-shadow(15px 15px 0 var(--color-secondary-blue))
+            /*drop-shadow(-10px -10px 0 var(--color-blue))*/;
+    border: solid 5px var(--color-secondary-blue);
     /*text-align: left;*/
 }
 
 input, textarea, .button-file {
-    background-color: var(--col-yellow);
+    background-color: var(--color-highlights-yellow);
     display: inline-block;
     margin: 5px;
-    caret-color: var(--col-blue);
+    caret-color: var(--color-text-blue);
     font-family: "A Pompadour", sans-serif;
-    border: solid 2px var(--col-blue);
+    border: solid 2px var(--color-secondary-blue);
     box-sizing: border-box;
 }
 
@@ -63,19 +69,19 @@ input, textarea, .button-file {
     color: gray;
 }
 .button-file:hover {
-    filter: drop-shadow(10px 10px var(--col-blue));
+    filter: drop-shadow(10px 10px var(--color-secondary-blue));
 }
 .button-submit {
     display: inline-block;
     padding: 15px;
     border-radius: 10px;
     cursor: pointer;
-    background-color: var(--col-blue);
-    color: var(--col-yellow);
+    background-color: var(--color-secondary-blue);
+    color: var(--color-highlights-yellow);
     transition: filter 0.5s ease-in-out;
 }
 .button-submit:hover {
-    filter: drop-shadow(10px 10px var(--col-yellow));
+    filter: drop-shadow(10px 10px var(--color-shadow-green));
 }
 textarea {
     resize: vertical;
@@ -83,14 +89,24 @@ textarea {
 }
 
 .uploaded-photos {
-    background-color: var(--col-green);
-    padding: 50px;
-    border-top: solid 5px var(--col-blue);
-    border-bottom: solid 5px var(--col-blue);
+    background: var(--color-primary-green);
+    border-top: solid 10px var(--color-secondary-blue);
 }
 
-h1, hr {
-    color: var(--col-blue);
+.uploaded-header {
+    background: var(--color-primary-green);
+    background: linear-gradient(180deg, var(--color-background-blue) 15%, var(--color-primary-green) 100%);
+    padding-top: 50px;
+}
+
+h1 {
+    color: var(--color-secondary-blue);
+    margin: 0;
+    padding: 20px;
+}
+hr {
+    color: var(--color-secondary-blue);
+    max-width: 90%;
 }
 
 
@@ -98,27 +114,90 @@ h1, hr {
     display: grid;
     grid-template-columns: repeat(var(--cols, 3), 1fr);
     gap: 20px;
-    padding: 20px;
+    padding: 50px;
+
+}
+
+.photo-slider
+{
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
 }
 
 .photo-unit {
+    background-color: var(--color-secondary-blue);
+    padding: 3px;
+    border-radius: 0 0 5% 5%;
     display: flex;
     flex-direction: column;
+    filter: drop-shadow(var(--color-shadow-green) 10px 10px 0);
 }
 
 .photo-unit img {
-    width: 100%;
-    height: 300px;
     object-fit: contain;
-}
-
-.photo-unit div {
-    padding: 10px;
-}
-
-.photo-unit img {
+    background-color: var(--color-highlights-yellow);
+    width: 100%;
     max-width: 200%;
     min-width: 50px;
     min-height: 50px;
-    max-height: 400px;
+    max-height: 300px;
+    flex-shrink: 0;
+    border: var(--color-secondary-blue) 2px solid;
+    border-top: none;
+    border-bottom: none;
+    box-sizing: border-box;
+}
+
+.photo-info {
+    background-color: var(--color-highlights-yellow);
+    border-radius: 0 0 15% 15%;
+    border: var(--color-secondary-blue) 2px solid;
+    border-top: none;
+    box-sizing: border-box;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+.photo-actions
+{
+    background-color: var(--color-highlights-yellow);
+    border: var(--color-secondary-blue) 2px solid;
+    border-bottom: none;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    align-content: flex-end;
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 5px;
+}
+.photo-actions em {
+    width: 60px;
+    height: 22px;
+    text-align: center;
+    background-color: var(--color-secondary-blue);
+    transition: filter 0.5s ease-in-out;
+}
+.photo-actions a:any-link {
+    color: var(--color-primary-green);
+}
+.photo-actions em:nth-child(1) {
+    padding-right: 3px;
+    border-bottom-right-radius: 25px;
+ }
+.photo-actions em:nth-child(2) {
+    padding-left: 3px;
+    border-bottom-left-radius: 25px;
+}
+.photo-actions em:nth-child(1):hover {
+    filter: drop-shadow(20px 0 var(--color-shadow-green));
+}
+.photo-actions em:nth-child(2):hover
+{
+    filter: drop-shadow(-20px 0 var(--color-shadow-green));
 }
