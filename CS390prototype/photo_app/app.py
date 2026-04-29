@@ -15,8 +15,9 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 # ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+DATABASE_PATH = os.path.join(BASE_DIR, 'database.db')
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -38,18 +39,17 @@ model = BlipForConditionalGeneration.from_pretrained(
 # DATABASE
 # ======================
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
-    c.execute('DROP TABLE IF EXISTS photos')
-
     c.execute('''
-        CREATE TABLE photos (
+        CREATE TABLE IF NOT EXISTS photos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT,
             name TEXT,
             description TEXT,
-            tags TEXT
+            tags TEXT,
+            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
@@ -57,7 +57,6 @@ def init_db():
     conn.close()
 
 init_db()
-
 # ======================
 # HELPERS
 # ======================
@@ -90,12 +89,51 @@ def generate_tags(image_path):
 # ======================
 @app.route('/')
 def index():
-    conn = sqlite3.connect('database.db')
+    sort = request.args.get("sort", "date_desc")
+    selected_tag = request.args.get("tag", "")
+
+    if sort == "name_asc":
+        order_by = "ORDER BY name COLLATE NOCASE ASC"
+    elif sort == "name_desc":
+        order_by = "ORDER BY name COLLATE NOCASE DESC"
+    elif sort == "date_asc":
+        order_by = "ORDER BY date_added ASC"
+    else:
+        order_by = "ORDER BY date_added DESC"
+
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM photos")
+
+    if selected_tag:
+        c.execute(
+            f"SELECT * FROM photos WHERE tags LIKE ? {order_by}",
+            (f"%{selected_tag}%",)
+        )
+    else:
+        c.execute(f"SELECT * FROM photos {order_by}")
+
     photos = c.fetchall()
+
+    c.execute("SELECT tags FROM photos")
+    tag_rows = c.fetchall()
+    print("TAG ROWS:", tag_rows)
     conn.close()
-    return render_template('index.html', photos=photos)
+
+    all_tags = []
+    for row in tag_rows:
+        if row[0]:
+            tags = [tag.strip() for tag in row[0].split(",") if tag.strip()]
+            all_tags.extend(tags)
+
+    all_tags = sorted(set(all_tags), key=str.lower)
+
+    return render_template(
+        "index.html",
+        photos=photos,
+        sort=sort,
+        all_tags=all_tags,
+        selected_tag=selected_tag
+    )
 
 
 @app.route('/upload', methods=['POST'])
@@ -131,7 +169,7 @@ def upload():
         else:
             tags = generated_tags
 
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(DATABASE_PATH)
         c = conn.cursor()
         c.execute(
             "INSERT INTO photos (filename, name, description, tags) VALUES (?, ?, ?, ?)",
@@ -149,7 +187,7 @@ def upload():
 #edit
 @app.route('/edit/<int:id>')
 def edit(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
     c.execute("SELECT * FROM photos WHERE id = ?", (id,))
@@ -160,7 +198,7 @@ def edit(id):
 
 @app.route('/delete/<int:id>')
 def delete(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
     #get filename
     c.execute("SELECT filename FROM photos WHERE id = ?", (id,))
@@ -190,7 +228,7 @@ def update(id):
     description = request.form['description']
     tags = request.form['tags']
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
 
     c.execute("""

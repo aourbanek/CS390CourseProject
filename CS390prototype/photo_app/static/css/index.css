@@ -173,6 +173,7 @@ hr {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    width: 100%;
     padding: 5px;
 }
 
@@ -263,7 +264,7 @@ hr {
     align-items: stretch;
     border: solid 5px var(--color-secondary-blue);
     border-radius: 28px;
-    box-shadow: 18px 18px 0 var(--color-secondary-blue);
+    box-shadow: 15px 15px 0 var(--color-secondary-blue);
     overflow: hidden;
 }
 
@@ -272,7 +273,6 @@ hr {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 72px 84px;
     background:
         radial-gradient(circle at top left, var(--color-primary-green), transparent 30%),
         radial-gradient(circle at bottom right, var(--color-secondary-blue), transparent 35%),
@@ -444,10 +444,6 @@ hr {
     .modal-info {
         border-left: 0;
         border-top: solid 5px var(--color-secondary-blue);
-    }
-
-    .modal-viewer {
-        padding: 76px 24px 32px;
     }
 
     .modal-nav {

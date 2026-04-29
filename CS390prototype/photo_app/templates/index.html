@@ -37,6 +37,29 @@
                 <input type="range" id="cols-slider" min="1" max="8" value="3" step="1">
                 <span id="cols-label">3</span>
             </div>
+            <form method="GET" style="margin-bottom: 20px; text-align:center;">
+                <label for="sort">Sort By:</label>
+                <select name="sort" id="sort" onchange="this.form.submit()">
+                    <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Newest Added</option>
+                    <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Oldest Added</option>
+                    <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>A-Z</option>
+                    <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Z-A</option>
+                </select>
+            </form>
+
+            <form method="GET" style="margin-bottom: 20px; text-align:center;">
+                <label for="tag">Filter by Tag:</label>
+                <select name="tag" id="tag" onchange="this.form.submit()">
+                    <option value="">All Tags</option>
+                    {% for tag in all_tags %}
+                    <option value="{{ tag }}" {% if selected_tag == tag %}selected{% endif %}>
+                        {{ tag }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <input type="hidden" name="sort" value="{{ sort }}">
+            </form>
         </div>
         <hr>
         <div class="uploaded-flex">
