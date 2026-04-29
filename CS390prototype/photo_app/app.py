@@ -48,7 +48,8 @@ def init_db():
             filename TEXT,
             name TEXT,
             description TEXT,
-            tags TEXT
+            tags TEXT,
+            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
@@ -56,7 +57,6 @@ def init_db():
     conn.close()
 
 init_db()
-
 # ======================
 # HELPERS
 # ======================
@@ -89,12 +89,51 @@ def generate_tags(image_path):
 # ======================
 @app.route('/')
 def index():
+    sort = request.args.get("sort", "date_desc")
+    selected_tag = request.args.get("tag", "")
+
+    if sort == "name_asc":
+        order_by = "ORDER BY name COLLATE NOCASE ASC"
+    elif sort == "name_desc":
+        order_by = "ORDER BY name COLLATE NOCASE DESC"
+    elif sort == "date_asc":
+        order_by = "ORDER BY date_added ASC"
+    else:
+        order_by = "ORDER BY date_added DESC"
+
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM photos")
+
+    if selected_tag:
+        c.execute(
+            f"SELECT * FROM photos WHERE tags LIKE ? {order_by}",
+            (f"%{selected_tag}%",)
+        )
+    else:
+        c.execute(f"SELECT * FROM photos {order_by}")
+
     photos = c.fetchall()
+
+    c.execute("SELECT tags FROM photos")
+    tag_rows = c.fetchall()
+    print("TAG ROWS:", tag_rows)
     conn.close()
-    return render_template('index.html', photos=photos)
+
+    all_tags = []
+    for row in tag_rows:
+        if row[0]:
+            tags = [tag.strip() for tag in row[0].split(",") if tag.strip()]
+            all_tags.extend(tags)
+
+    all_tags = sorted(set(all_tags), key=str.lower)
+
+    return render_template(
+        "index.html",
+        photos=photos,
+        sort=sort,
+        all_tags=all_tags,
+        selected_tag=selected_tag
+    )
 
 
 @app.route('/upload', methods=['POST'])
