@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Photo</title>
+</head>
+<body>
+
+<h2>Edit Photo</h2>
+
+<form action="/update/{{ photo[0] }}" method="POST">
+    <input type="text" name="name" value="{{ photo[2] }}"><br><br>
+    <textarea name="description">{{ photo[3] }}</textarea><br><br>
+    <input type="text" name="tags" value="{{ photo[4] }}"><br><br>
+
+    <button type="submit">Save Changes</button>
+</form>
+
+</body>
+</html>
