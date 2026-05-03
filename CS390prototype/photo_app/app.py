@@ -31,6 +31,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 processor = BlipProcessor.from_pretrained(
     "Salesforce/blip-image-captioning-base"
 )
+
 model = BlipForConditionalGeneration.from_pretrained(
     "Salesforce/blip-image-captioning-base"
 )
@@ -56,7 +57,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 init_db()
+
 # ======================
 # HELPERS
 # ======================
@@ -72,17 +75,16 @@ def generate_tags(image_path):
     out = model.generate(**inputs)
     caption = processor.decode(out[0], skip_special_tokens=True)
 
-    # convert caption → tags
     words = caption.lower().replace(".", "").split()
 
     stop_words = {"a", "an", "the", "is", "on", "in", "at", "with", "and", "of"}
 
     tags = [w for w in words if w not in stop_words]
 
-    # remove duplicates while keeping order
     tags = list(dict.fromkeys(tags))
 
     return ", ".join(tags)
+
 
 # ======================
 # ROUTES
@@ -116,10 +118,11 @@ def index():
 
     c.execute("SELECT tags FROM photos")
     tag_rows = c.fetchall()
-    print("TAG ROWS:", tag_rows)
+
     conn.close()
 
     all_tags = []
+
     for row in tag_rows:
         if row[0]:
             tags = [tag.strip() for tag in row[0].split(",") if tag.strip()]
@@ -138,53 +141,73 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
-        flash("No file uploaded")
+    files = request.files.getlist('files')
+  
+    names = request.form.getlist('names')
+    descriptions = request.form.getlist('descriptions')
+    user_tags_list = request.form.getlist('tags')
+
+    if not files or files[0].filename == '':
+        flash("No files selected")
         return redirect(url_for('index'))
 
-    file = request.files['file']
-    name = request.form.get('name', '')
-    description = request.form.get('description', '')
-    user_tags = request.form.get('tags', '').strip()
+    conn = sqlite3.connect(DATABASE_PATH)
+    c = conn.cursor()
 
-    if file.filename == '':
-        flash("No file selected")
-        return redirect(url_for('index'))
+    for i, file in enumerate(files):
+        if file and allowed_file(file.filename):
+            original_filename = secure_filename(file.filename)
 
-    # ONLY IMAGES
-    if file and allowed_file(file.filename):
+            name_only, ext = os.path.splitext(original_filename)
 
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+            final_filename = original_filename
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], final_filename)
 
-        # AUTO TAGGING
-        generated_tags = generate_tags(filepath)
+            counter = 1
+            while os.path.exists(filepath):
+                final_filename = f"{name_only}_{counter}{ext}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], final_filename)
+                counter += 1
 
-        if user_tags:
-            user_tag_list = [tag.strip() for tag in user_tags.split(',') if tag.strip()]
-            generated_tag_list = [tag.strip() for tag in generated_tags.split(',') if tag.strip()]
-            combined_tags = user_tag_list + [tag for tag in generated_tag_list if tag not in user_tag_list]
-            tags = ", ".join(combined_tags)
-        else:
-            tags = generated_tags
+            file.save(filepath)
 
-        conn = sqlite3.connect(DATABASE_PATH)
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO photos (filename, name, description, tags) VALUES (?, ?, ?, ?)",
-            (filename, name, description, tags)
-        )
-        conn.commit()
-        conn.close()
+            generated_tags = generate_tags(filepath)
 
-        return redirect(url_for('index'))
+            photo_name = names[i] if i < len(names) else name_only
+            description = descriptions[i] if i < len(descriptions) else ''
+            user_tags = user_tags_list[i].strip() if i < len(user_tags_list) else ''
 
-    else:
-        flash("Only image files allowed")
-        return redirect(url_for('index'))
+            if user_tags:
+                user_tag_list = [
+                    tag.strip() for tag in user_tags.split(',')
+                    if tag.strip()
+                ]
 
-#edit
+                generated_tag_list = [
+                    tag.strip() for tag in generated_tags.split(',')
+                    if tag.strip()
+                ]
+
+                combined_tags = user_tag_list + [
+                    tag for tag in generated_tag_list
+                    if tag not in user_tag_list
+                ]
+
+                tags = ", ".join(combined_tags)
+            else:
+                tags = generated_tags
+
+            c.execute(
+                "INSERT INTO photos (filename, name, description, tags) VALUES (?, ?, ?, ?)",
+                (final_filename, photo_name, description, tags)
+            )
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('index'))
+
+
 @app.route('/edit/<int:id>')
 def edit(id):
     conn = sqlite3.connect(DATABASE_PATH)
@@ -194,34 +217,32 @@ def edit(id):
     photo = c.fetchone()
 
     conn.close()
+
     return render_template('edit.html', photo=photo)
+
 
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
-    #get filename
+
     c.execute("SELECT filename FROM photos WHERE id = ?", (id,))
     photo = c.fetchone()
 
     if photo:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], photo[0])
 
-        # Delete file from uploads
         if os.path.exists(filepath):
             os.remove(filepath)
 
-        # Delete from database
         c.execute("DELETE FROM photos WHERE id = ?", (id,))
         conn.commit()
 
     conn.close()
+
     return redirect(url_for('index'))
 
-#debug
-print("DELETE ROUTE HIT:", id)
 
-#save changes
 @app.route('/update/<int:id>', methods=['POST'])
 def update(id):
     name = request.form['name']
@@ -241,6 +262,7 @@ def update(id):
     conn.close()
 
     return redirect(url_for('index'))
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
