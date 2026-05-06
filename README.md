@@ -25,9 +25,8 @@ CS390prototype/
 │   │   └── fonts/
 │   │       ├── APompadour.ttf
 │   │       └── APompadourBold.ttf
-│   ├── templates/                 # HTML pages
-│   │   ├── edit.html/             # Page used to edit image data (REDUNDANT; functionality implemented into main page)
-│   │   └── index.html/            # Main page
+│   ├── templates/
+│   │   └── index.html/            # Main UI display
 │   ├── uploads/                   # Uploaded files stored here (excluding additional user-added data included/stored in database.db; empty by default)
 │   ├── app.py                     # Main app driver
 │   └── database.db                # Data about uploaded items stored here
