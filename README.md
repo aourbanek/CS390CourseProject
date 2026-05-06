@@ -5,7 +5,7 @@ Our product, in theory, would be an online photo management app, similar in inte
 
 However, given the limited time available in the course, actual design and prototyping for any live product features will be [tentatively] limited to the file uploading process, including interacting with a device's native file management system and adding to the uploaded item: tags, a name, description, and any other metadata we find applicable.
 
-## To run current version
+### Installation / Running
 - Download fullCS390prototype "root" folder
 - Open VS Code (developed in version 1.112.0) with the Python extension installed https://marketplace.visualstudio.com/items?itemName=ms-python.python
 - Within a powershell terminal from the "root" folder:
@@ -14,3 +14,21 @@ However, given the limited time available in the course, actual design and proto
   - Install Flask using `pip install flask`
   - Install required libraries for AI tagging using `pip install torch transformers pillow`
 - Run app.py
+
+### Structure
+CS390prototype/
+├── photo_app/                     # Parent folder for actual source code
+│   ├── static/                    # Style resources for HTML to reference
+│   │   ├── css/
+│   │   │   └── index.css
+│   │   └── fonts/
+│   │       ├── APompadour.ttf
+│   │       └── APompadourBold.ttf
+│   ├── templates/                 # HTML pages
+│   │   ├── edit.html/             # Page used to edit image data (REDUNDANT; functionality implemented into main page)
+│   │   └── index.html/            # Main page
+│   ├── uploads/                   # Uploaded files stored here (excluding additional user-added data included/stored in database.db; empty by default)
+│   ├── app.py                     # Main app driver
+│   └── database.db                # Data about uploaded items stored here
+└── requirements.txt               # Packages auto-installed by `npm install`
+README.md          # Project documentation
