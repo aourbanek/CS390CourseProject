@@ -80,11 +80,6 @@
                 >
                     <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200">
                 </button>
-
-                <div class="photo-actions">
-                    <a href="/edit/{{ photo[0] }}">Edit</a>
-                    <a href="/delete/{{ photo[0] }}">Delete</a>
-                </div>
             </div>
             {% endfor %}
         </div>
