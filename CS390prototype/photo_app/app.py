@@ -207,20 +207,6 @@ def upload():
 
     return redirect(url_for('index'))
 
-
-@app.route('/edit/<int:id>')
-def edit(id):
-    conn = sqlite3.connect(DATABASE_PATH)
-    c = conn.cursor()
-
-    c.execute("SELECT * FROM photos WHERE id = ?", (id,))
-    photo = c.fetchone()
-
-    conn.close()
-
-    return render_template('edit.html', photo=photo)
-
-
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = sqlite3.connect(DATABASE_PATH)
