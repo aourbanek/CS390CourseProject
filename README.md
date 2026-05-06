@@ -16,6 +16,7 @@ However, given the limited time available in the course, actual design and proto
 - Run app.py
 
 ### Structure
+```
 CS390prototype/
 ├── photo_app/                     # Parent folder for actual source code
 │   ├── static/                    # Style resources for HTML to reference
@@ -31,4 +32,5 @@ CS390prototype/
 │   ├── app.py                     # Main app driver
 │   └── database.db                # Data about uploaded items stored here
 └── requirements.txt               # Packages auto-installed by `npm install`
-README.md          # Project documentation
+README.md                          # Project documentation
+```
