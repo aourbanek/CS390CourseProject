@@ -9,25 +9,28 @@
 
 <body>
 <main id="page-content">
+<div class="header-bg">
     <div class="uploader">
-        <h1>Upload Photo</h1> <hr>
+        <h1>Upload Photos</h1> <hr>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <label for="file" class="button-file" id="file-label">
-                Upload File...
+                Upload Files...
             </label>
-            <input type="file" name="file" id="file" required>
+            <input type="file" name="files" id="file" accept="image/*" multiple required>
             <br>
-            <img id="preview" src="" alt="" style="display:none; max-height: 200px; margin: 10px; border-radius: 10px; border: 2px solid var(--col-blue);">
+            <!--<img id="preview" src="" alt="" style="display:none; max-height: 200px; margin: 10px; border-radius: 10px; border: 2px solid var(&#45;&#45;col-blue);">--><!--remove-->
+            <div id="multi-preview"></div>
             <br>
-            <input type="text" name="name" placeholder="Photo name" required><br>
-            <textarea name="description" placeholder="Description"></textarea><br>
-            <input type="text" name="tags" placeholder="Tags (comma separated)"><br><br>
+            <!--<input type="text" name="name" placeholder="Photo name" required><br>--> <!--remove-->
+            <!--<textarea name="description" placeholder="Description"></textarea><br>--> <!--remove-->
+            <!--<input type="text" name="tags" placeholder="Tags (comma separated)"><br><br>--> <!--remove-->
             <label for="submit" class="button-submit">
                 Upload!
             </label>
             <button type="submit" id="submit">Upload</button>
         </form>
     </div>
+</div>
 
     <div class="uploaded-photos">
         <div class="uploaded-header">
@@ -66,10 +69,6 @@
             <!-- Looped HTML per uploaded photo using Jinja -->
             {% for photo in photos %}
             <div class="photo-unit">
-                <div class="photo-actions">
-                    <a href="/edit/{{ photo[0] }}">Edit</a>
-                    <a href="/delete/{{ photo[0] }}">Delete</a>
-                </div>
                 <button
                     type="button"
                     class="photo-trigger"
@@ -123,10 +122,12 @@
                 <textarea id="modal-photo-description" name="description" rows="4"></textarea>
             </div>
             <div class="modal-field">
-                <span class="modal-label">Applied Tags</span>
-                <div class="modal-tags" id="modal-photo-tags"></div>
+                <!--<span class="modal-label">Applied Tags</span>
+                <div class="modal-tags" id="modal-photo-tags"></div>-->
+                <label for="modal-photo-tags-input">Applied Tags</label>
+                <input id="modal-photo-tags-input" name="tags" type="text" placeholder="Tags, comma separated">
             </div>
-            <input id="modal-photo-tags-input" name="tags" type="hidden">
+            <!--<input id="modal-photo-tags-input" name="tags" type="hidden">-->
             <div class="modal-actions">
                 <button type="submit" id="modal-save-button">Save Changes</button>
                 <a id="modal-delete-link" href="">Delete</a>
@@ -146,18 +147,68 @@
     slider.addEventListener('input', () => setCols(slider.value));
     setCols(slider.value);
 
-    document.getElementById('file').addEventListener('change', function() {
-        const preview = document.getElementById('preview');
+    // document.getElementById('file').addEventListener('change', function() {
+    //     const preview = document.getElementById('preview');
+    //     const fileLabel = document.getElementById('file-label');
+    //     const file = this.files[0];
+    //     if (file) {
+    //         preview.src = URL.createObjectURL(file);
+    //         preview.style.display = 'inline-block';
+    //         fileLabel.textContent = file.name;
+    //     } else {
+    //         preview.style.display = 'none';
+    //         fileLabel.textContent = 'Upload File...';
+    //     }
+    // });
+
+    document.getElementById('file').addEventListener('change', function () {
+        const previewBox = document.getElementById('multi-preview');
         const fileLabel = document.getElementById('file-label');
-        const file = this.files[0];
-        if (file) {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'inline-block';
-            fileLabel.textContent = file.name;
-        } else {
-            preview.style.display = 'none';
-            fileLabel.textContent = 'Upload File...';
+
+        previewBox.innerHTML = '';
+
+        const files = Array.from(this.files);
+
+        if (files.length === 0) {
+            fileLabel.textContent = 'Upload Files...';
+            return;
         }
+
+        fileLabel.textContent = files.length + ' file(s) selected';
+
+        files.forEach((file) => {
+            const wrapper = document.createElement('div');
+
+            wrapper.style.border = '2px solid var(--col-blue)';
+            wrapper.style.borderRadius = '10px';
+            wrapper.style.padding = '10px';
+            wrapper.style.margin = '15px';
+
+            const defaultName = file.name.split('.').slice(0, -1).join('.');
+
+            wrapper.innerHTML = `
+                <img src="${URL.createObjectURL(file)}"
+                     style="max-height: 180px; border-radius: 10px; margin-bottom: 10px;">
+                <br>
+
+                <input type="text"
+                       name="names"
+                       placeholder="Photo name"
+                       value="${defaultName}"
+                       required>
+                <br>
+
+                <textarea name="descriptions"
+                          placeholder="Description"></textarea>
+                <br>
+
+                <input type="text"
+                       name="tags"
+                       placeholder="Tags for this photo, comma separated">
+            `;
+
+            previewBox.appendChild(wrapper);
+        });
     });
 
     const modal = document.getElementById('photo-modal');
@@ -169,7 +220,7 @@
     const modalEditForm = document.getElementById('modal-edit-form');
     const modalName = document.getElementById('modal-photo-name');
     const modalDescription = document.getElementById('modal-photo-description');
-    const modalTags = document.getElementById('modal-photo-tags');
+    // const modalTags = document.getElementById('modal-photo-tags');
     const modalTagsInput = document.getElementById('modal-photo-tags-input');
     const modalDeleteLink = document.getElementById('modal-delete-link');
     const photoButtons = Array.from(document.querySelectorAll('.photo-trigger'));
@@ -180,26 +231,27 @@
         modalImage.alt = button.dataset.name;
         modalName.value = button.dataset.name || 'Untitled Photo';
         modalDescription.value = button.dataset.description || 'No description provided.';
-        modalTags.innerHTML = '';
+        // modalTags.innerHTML = '';
+        modalTagsInput.value = button.dataset.tags || '';
 
-        const tags = button.dataset.tags
-            ? button.dataset.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
-            : [];
-        modalTagsInput.value = tags.join(', ');
-
-        if (tags.length === 0) {
-            const emptyTag = document.createElement('span');
-            emptyTag.className = 'tag-chip tag-chip-empty';
-            emptyTag.textContent = 'No tags';
-            modalTags.appendChild(emptyTag);
-        } else {
-            tags.forEach((tag) => {
-                const chip = document.createElement('span');
-                chip.className = 'tag-chip';
-                chip.textContent = tag;
-                modalTags.appendChild(chip);
-            });
-        }
+        // const tags = button.dataset.tags
+        //     ? button.dataset.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+        //     : [];
+        // modalTagsInput.value = tags.join(', ');
+        //
+        // if (tags.length === 0) {
+        //     const emptyTag = document.createElement('span');
+        //     emptyTag.className = 'tag-chip tag-chip-empty';
+        //     emptyTag.textContent = 'No tags';
+        //     modalTags.appendChild(emptyTag);
+        // } else {
+        //     tags.forEach((tag) => {
+        //         const chip = document.createElement('span');
+        //         chip.className = 'tag-chip';
+        //         chip.textContent = tag;
+        //         modalTags.appendChild(chip);
+        //     });
+        // }
 
         modalEditForm.action = button.dataset.updateUrl;
         modalDeleteLink.href = button.dataset.deleteUrl;
@@ -221,6 +273,9 @@
     }
 
     function showPhoto(index) {
+        if (photoButtons.length === 0) {
+            return;
+        }
         const wrappedIndex = (index + photoButtons.length) % photoButtons.length;
         currentIndex = wrappedIndex;
         renderModal(photoButtons[wrappedIndex]);
