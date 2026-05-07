@@ -9,62 +9,64 @@
 
 <body>
 <main id="page-content">
+<div class="header-bg">
     <div class="uploader">
-        <h1>Upload Photos</h1>
-        <hr>
-
+        <h1>Upload Photos</h1> <hr>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <label for="file" class="button-file" id="file-label">
                 Upload Files...
             </label>
-
             <input type="file" name="files" id="file" accept="image/*" multiple required>
-
-            <div id="multi-preview"></div>
-
             <br>
-
+            <!--<img id="preview" src="" alt="" style="display:none; max-height: 200px; margin: 10px; border-radius: 10px; border: 2px solid var(&#45;&#45;col-blue);">--><!--remove-->
+            <div id="multi-preview"></div>
+            <br>
+            <!--<input type="text" name="name" placeholder="Photo name" required><br>--> <!--remove-->
+            <!--<textarea name="description" placeholder="Description"></textarea><br>--> <!--remove-->
+            <!--<input type="text" name="tags" placeholder="Tags (comma separated)"><br><br>--> <!--remove-->
             <label for="submit" class="button-submit">
                 Upload!
             </label>
             <button type="submit" id="submit">Upload</button>
         </form>
     </div>
+</div>
 
     <div class="uploaded-photos">
-        <h1>Uploaded Photos</h1>
+        <div class="uploaded-header">
+            <h1>Uploaded Photos</h1>
+            <div class="photo-slider">
+                <label for="cols-slider">Photos per row:</label>
+                <input type="range" id="cols-slider" min="1" max="8" value="3" step="1">
+                <span id="cols-label">3</span>
+            </div>
+            <form method="GET" style="margin-bottom: 20px; text-align:center;">
+                <label for="sort">Sort By:</label>
+                <select name="sort" id="sort" onchange="this.form.submit()">
+                    <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Newest Added</option>
+                    <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Oldest Added</option>
+                    <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>A-Z</option>
+                    <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Z-A</option>
+                </select>
+            </form>
 
-        <div style="margin: 20px 0; display: flex; align-items: center; gap: 12px; justify-content: center;">
-            <label for="cols-slider">Photos per row:</label>
-            <input type="range" id="cols-slider" min="1" max="8" value="3" step="1">
-            <span id="cols-label">3</span>
-        </div>
-
-        <form method="GET" style="margin-bottom: 20px; text-align:center;">
-            <label for="sort">Sort By:</label>
-            <select name="sort" id="sort" onchange="this.form.submit()">
-                <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Newest Added</option>
-                <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Oldest Added</option>
-                <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>A-Z</option>
-                <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Z-A</option>
-            </select>
-        </form>
-
-        <form method="GET" style="margin-bottom: 20px; text-align:center;">
-            <label for="tag">Filter by Tag:</label>
-            <select name="tag" id="tag" onchange="this.form.submit()">
-                <option value="">All Tags</option>
-                {% for tag in all_tags %}
+            <form method="GET" style="margin-bottom: 20px; text-align:center;">
+                <label for="tag">Filter by Tag:</label>
+                <select name="tag" id="tag" onchange="this.form.submit()">
+                    <option value="">All Tags</option>
+                    {% for tag in all_tags %}
                     <option value="{{ tag }}" {% if selected_tag == tag %}selected{% endif %}>
                         {{ tag }}
                     </option>
-                {% endfor %}
-            </select>
+                    {% endfor %}
+                </select>
 
-            <input type="hidden" name="sort" value="{{ sort }}">
-        </form>
-
+                <input type="hidden" name="sort" value="{{ sort }}">
+            </form>
+        </div>
+        <hr>
         <div class="uploaded-flex">
+            <!-- Looped HTML per uploaded photo using Jinja -->
             {% for photo in photos %}
             <div class="photo-unit">
                 <button
@@ -80,7 +82,16 @@
                 >
                     <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200">
                 </button>
-            </div>
+                <div class="photo-info">
+                    <div>
+                        <strong>{{ photo[2] }}</strong><br>
+                    </div>
+                    <div>
+                        <hr><em>Tags: {{ photo[4] }} </em>
+                    </div>
+                </div>
+
+             </div>
             {% endfor %}
         </div>
     </div>
@@ -88,40 +99,35 @@
 
 <div class="photo-modal hidden" id="photo-modal" aria-hidden="true">
     <div class="photo-modal-backdrop" id="photo-modal-backdrop"></div>
-
     <div class="photo-modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-photo-name">
         <div class="modal-viewer">
             <button type="button" class="modal-close" id="modal-close" aria-label="Close photo view">Exit</button>
-
             <button type="button" class="modal-nav modal-nav-left" id="modal-prev" aria-label="Previous photo">
                 &#8249;
             </button>
-
             <div class="modal-image-wrap">
                 <img id="modal-photo-image" src="" alt="">
             </div>
-
             <button type="button" class="modal-nav modal-nav-right" id="modal-next" aria-label="Next photo">
                 &#8250;
             </button>
         </div>
-
         <form class="modal-info" id="modal-edit-form" method="POST" action="">
             <div class="modal-field">
                 <label for="modal-photo-name">Item Name</label>
                 <input id="modal-photo-name" name="name" type="text" required>
             </div>
-
             <div class="modal-field">
                 <label for="modal-photo-description">Item Description</label>
                 <textarea id="modal-photo-description" name="description" rows="4"></textarea>
             </div>
-
             <div class="modal-field">
+                <!--<span class="modal-label">Applied Tags</span>
+                <div class="modal-tags" id="modal-photo-tags"></div>-->
                 <label for="modal-photo-tags-input">Applied Tags</label>
                 <input id="modal-photo-tags-input" name="tags" type="text" placeholder="Tags, comma separated">
             </div>
-
+            <!--<input id="modal-photo-tags-input" name="tags" type="hidden">-->
             <div class="modal-actions">
                 <button type="submit" id="modal-save-button">Save Changes</button>
                 <a id="modal-delete-link" href="">Delete</a>
@@ -134,14 +140,26 @@
     const slider = document.getElementById('cols-slider');
     const label = document.getElementById('cols-label');
     const grid = document.querySelector('.uploaded-flex');
-
     function setCols(n) {
         grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
         label.textContent = n;
     }
-
     slider.addEventListener('input', () => setCols(slider.value));
     setCols(slider.value);
+
+    // document.getElementById('file').addEventListener('change', function() {
+    //     const preview = document.getElementById('preview');
+    //     const fileLabel = document.getElementById('file-label');
+    //     const file = this.files[0];
+    //     if (file) {
+    //         preview.src = URL.createObjectURL(file);
+    //         preview.style.display = 'inline-block';
+    //         fileLabel.textContent = file.name;
+    //     } else {
+    //         preview.style.display = 'none';
+    //         fileLabel.textContent = 'Upload File...';
+    //     }
+    // });
 
     document.getElementById('file').addEventListener('change', function () {
         const previewBox = document.getElementById('multi-preview');
@@ -202,19 +220,38 @@
     const modalEditForm = document.getElementById('modal-edit-form');
     const modalName = document.getElementById('modal-photo-name');
     const modalDescription = document.getElementById('modal-photo-description');
+    // const modalTags = document.getElementById('modal-photo-tags');
     const modalTagsInput = document.getElementById('modal-photo-tags-input');
     const modalDeleteLink = document.getElementById('modal-delete-link');
     const photoButtons = Array.from(document.querySelectorAll('.photo-trigger'));
-
     let currentIndex = 0;
 
     function renderModal(button) {
         modalImage.src = button.dataset.image;
         modalImage.alt = button.dataset.name;
-
         modalName.value = button.dataset.name || 'Untitled Photo';
-        modalDescription.value = button.dataset.description || '';
+        modalDescription.value = button.dataset.description || 'No description provided.';
+        // modalTags.innerHTML = '';
         modalTagsInput.value = button.dataset.tags || '';
+
+        // const tags = button.dataset.tags
+        //     ? button.dataset.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+        //     : [];
+        // modalTagsInput.value = tags.join(', ');
+        //
+        // if (tags.length === 0) {
+        //     const emptyTag = document.createElement('span');
+        //     emptyTag.className = 'tag-chip tag-chip-empty';
+        //     emptyTag.textContent = 'No tags';
+        //     modalTags.appendChild(emptyTag);
+        // } else {
+        //     tags.forEach((tag) => {
+        //         const chip = document.createElement('span');
+        //         chip.className = 'tag-chip';
+        //         chip.textContent = tag;
+        //         modalTags.appendChild(chip);
+        //     });
+        // }
 
         modalEditForm.action = button.dataset.updateUrl;
         modalDeleteLink.href = button.dataset.deleteUrl;
@@ -223,7 +260,6 @@
     function openModal(button) {
         currentIndex = Number(button.dataset.index || 0);
         renderModal(button);
-
         modal.classList.remove('hidden');
         modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
@@ -240,7 +276,6 @@
         if (photoButtons.length === 0) {
             return;
         }
-
         const wrappedIndex = (index + photoButtons.length) % photoButtons.length;
         currentIndex = wrappedIndex;
         renderModal(photoButtons[wrappedIndex]);
@@ -254,7 +289,6 @@
     modalPrev.addEventListener('click', () => showPhoto(currentIndex - 1));
     modalNext.addEventListener('click', () => showPhoto(currentIndex + 1));
     modalBackdrop.addEventListener('click', closeModal);
-
     document.addEventListener('keydown', (event) => {
         if (modal.classList.contains('hidden')) {
             return;
