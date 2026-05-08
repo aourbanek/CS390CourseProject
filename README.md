@@ -13,6 +13,7 @@ However, given the limited time available in the course, actual design and proto
   - Activate the virtual environment using `.\.venv\Scripts\Activate` (Powershell's Execution Policy may need to be changed to allow the script)
   - Install Flask using `pip install flask`
   - Install required libraries for AI tagging using `pip install torch transformers pillow`
+  - Install NLTK using `pip install nltk` (improves auto-tagging)
 - Run app.py
 
 ### Structure
