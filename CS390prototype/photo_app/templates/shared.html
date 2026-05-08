@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ photo[2] }}</title>
+    <link rel="stylesheet" href="/../static/css/index.css">
+
+    <style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 40px;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+
+        background:
+            linear-gradient(
+                to bottom,
+                #dcefff 0%,
+                #cfe7ff 45%,
+                #bddcff 100%
+            );
+
+        color: #1f2937;
+    }
+
+    .shared-wrapper {
+        max-width: 1400px;
+        margin: auto;
+        text-align: center;
+    }
+
+    .shared-image {
+        width: 100%;
+        max-height: 82vh;
+        object-fit: contain;
+
+        border-radius: 16px;
+
+        border: 3px solid #5da9ff;
+
+        background: white;
+
+        box-shadow:
+            0 10px 30px rgba(0,0,0,0.12);
+
+        margin-bottom: 25px;
+    }
+
+    .shared-info {
+        background: white;
+
+        border: 2px solid #5da9ff;
+
+        border-radius: 16px;
+
+        padding: 22px;
+
+        box-shadow:
+            0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .shared-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .shared-description {
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+
+    .shared-tags {
+        color: #4b5563;
+        font-style: italic;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="shared-wrapper">
+
+    <img
+        class="shared-image"
+        src="{{ url_for('uploaded_file', filename=photo[1]) }}"
+        alt="{{ photo[2] }}"
+    >
+
+    <div class="shared-info">
+        <div class="shared-title">
+            {{ photo[2] }}
+        </div>
+
+        {% if photo[3] %}
+        <div class="shared-description">
+            {{ photo[3] }}
+        </div>
+        {% endif %}
+
+        {% if photo[4] %}
+        <div class="shared-tags">
+            Tags: {{ photo[4] }}
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+</body>
+</html>
