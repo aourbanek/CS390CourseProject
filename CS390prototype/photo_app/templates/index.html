@@ -79,6 +79,7 @@
                     data-tags="{{ photo[4] }}"
                     data-update-url="/update/{{ photo[0] }}"
                     data-delete-url="/delete/{{ photo[0] }}"
+                    data-export-url="{{ url_for('export_share_file', id=photo[0]) }}"
                 >
                     <img src="{{ url_for('uploaded_file', filename=photo[1]) }}" alt="{{ photo[2] }}" width="200">
                 </button>
@@ -130,6 +131,7 @@
             <!--<input id="modal-photo-tags-input" name="tags" type="hidden">-->
             <div class="modal-actions">
                 <button type="submit" id="modal-save-button">Save Changes</button>
+                <button type="button" id="modal-share-button">Share</button>
                 <a id="modal-delete-link" href="">Delete</a>
             </div>
         </form>
@@ -223,6 +225,7 @@
     // const modalTags = document.getElementById('modal-photo-tags');
     const modalTagsInput = document.getElementById('modal-photo-tags-input');
     const modalDeleteLink = document.getElementById('modal-delete-link');
+    const modalShareButton = document.getElementById('modal-share-button');
     const photoButtons = Array.from(document.querySelectorAll('.photo-trigger'));
     let currentIndex = 0;
 
@@ -255,6 +258,7 @@
 
         modalEditForm.action = button.dataset.updateUrl;
         modalDeleteLink.href = button.dataset.deleteUrl;
+        modalShareButton.dataset.exportUrl = button.dataset.exportUrl || "";
     }
 
     function openModal(button) {
@@ -283,6 +287,14 @@
 
     photoButtons.forEach((button) => {
         button.addEventListener('click', () => openModal(button));
+    });
+
+    modalShareButton.addEventListener('click', () => {
+        const exportUrl = modalShareButton.dataset.exportUrl;
+
+        if (exportUrl) {
+            window.location.href = exportUrl;
+        }
     });
 
     modalClose.addEventListener('click', closeModal);
